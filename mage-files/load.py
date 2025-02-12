@@ -9,7 +9,7 @@ if 'data_exporter' not in globals():
 
 
 @data_exporter
-def export_data_to_big_query(data, **kwargs) -> None:
+def export_data_to_big_query(df: DataFrame, **kwargs) -> None:
     """
     Template for exporting data to a BigQuery warehouse.
     Specify your configuration settings in 'io_config.yaml'.
@@ -21,10 +21,23 @@ def export_data_to_big_query(data, **kwargs) -> None:
     config_path = path.join(get_repo_path(), 'io_config.yaml')
     config_profile = 'default'
 
-    for key, value in data.items():
-        table_id = 'data-with-darshil.uber_data_engineering_yt.{}'.format(key)
-        BigQuery.with_config(ConfigFileLoader(config_path, config_profile)).export(
-            DataFrame(value),
-            table_id,
+    table_ids = [
+        "datetime_dim",
+        "passenger_count_dim",
+        "trip_distance_dim",
+        "rate_code_dim",
+        "pickup_location_dim",
+        "dropoff_location_dim",
+        "payment_type_dim",
+        "fact_table"
+    ]
+    project_id = "'data-with-darshil.uber_data_engineering_yt"
+    
+    bigquery_client = BigQuery.with_config(ConfigFileLoader(config_path, config_profile))
+
+    for i, table_name in enumerate(table_ids):
+        bigquery_client.export(
+            df[i],
+            table_id=f"{project_id}.{table_name}",
             if_exists='replace',  # Specify resolution policy if table name already exists
         )
